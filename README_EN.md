@@ -179,6 +179,50 @@ Using d3-contour's Marching Squares algorithm to convert scalar field into multi
 | **Kumi Mirror** | Uses faster Overpass API mirror server |
 | **Grid Resolution** | 150×150 grid, balances quality and performance |
 | **Conditional Rendering** | No data loaded when zoom < 11 |
+| **Smart bbox Comparison** | Only re-fetch when viewport moves >500m or zoom changes >15% |
+| **Distance Truncation** | Resource energy fields only update grid cells within 3σ radius |
+
+---
+
+## Security & Code Quality
+
+This project has undergone comprehensive code review with improvements for security, performance, and maintainability:
+
+### Security Fixes
+
+| Issue | Problem | Solution |
+|-------|---------|----------|
+| **XSS Protection** | Unescaped dynamic HTML | Use `escapeHtml()` for all user-controllable data |
+| **CSP Policy** | Missing Content Security Policy | Added complete CSP header restricting script/style/connect sources |
+| **HTTPS Upgrade** | Mixed content risk | Added `upgrade-insecure-requests` directive |
+| **Coordinate Validation** | Malicious data injection | Validate coordinates are within Taiwan bounds (H05) |
+| **ID Validation** | Invalid OSM IDs | Ensure ID is a positive integer |
+
+### API Robustness
+
+| Issue | Problem | Solution |
+|-------|---------|----------|
+| **Rate Limiting** | Excessive requests get blocked | Enforce minimum 1-second request interval (H04) |
+| **429 Handling** | No response after rate limiting | Read Retry-After header, auto-wait |
+| **Duplicate Requests** | Concurrent requests waste resources | `isLoading` state lock + smart bbox comparison (H02) |
+| **Error Messages** | Technical errors exposed to users | User-friendly Chinese Toast notifications (H01) |
+
+### UX & Accessibility
+
+| Item | Improvement |
+|------|-------------|
+| **Toast Notifications** | Replace console.log with visual error/status feedback |
+| **SafeStorage** | localStorage wrapper handling private mode/quota exceeded (M02) |
+| **CSS Variables** | Theme switching using CSS custom properties (M09) |
+| **ARIA Attributes** | Added role, aria-label, aria-live for screen reader support (M04) |
+
+### Performance Optimizations
+
+| Item | Improvement |
+|------|-------------|
+| **Reverse Update** | Contour calculation reduced from O(n×m) to O(n×k), where k is influence range |
+| **Smart Updates** | Skip API requests when bbox change below threshold |
+| **Name Truncation** | Limit long names to 200 chars to prevent memory bloat |
 
 ---
 
