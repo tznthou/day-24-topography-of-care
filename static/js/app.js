@@ -89,12 +89,12 @@ const App = (() => {
     // Map events (debounced)
     document.addEventListener('map:moveend', () => {
       clearTimeout(updateTimer);
-      updateTimer = setTimeout(fetchAndRender, UPDATE_DEBOUNCE);
+      updateTimer = setTimeout(fetchAndRender, CONFIG.UPDATE_DEBOUNCE_MS);
     });
 
     document.addEventListener('map:zoomend', () => {
       clearTimeout(updateTimer);
-      updateTimer = setTimeout(fetchAndRender, UPDATE_DEBOUNCE);
+      updateTimer = setTimeout(fetchAndRender, CONFIG.UPDATE_DEBOUNCE_MS);
     });
 
     // Renderer resize event
