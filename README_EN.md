@@ -18,7 +18,7 @@ Transforming Taiwan's local social welfare resources into a "warm topography" on
 
 - **Contour Visualization**: Transform resource points into energy fields, generating organic topographic contours
 - **Real-time OSM Data**: Fetch Taiwan data instantly via Overpass API from OpenStreetMap
-- **Four Resource Types**: Hospitals, clinics, libraries, social welfare institutions
+- **Seven Resource Types**: Hospitals, clinics, pharmacies, libraries, community centers, kindergartens, social welfare institutions
 - **Resource Filtering**: Toggle display of each resource type freely
 - **Theme Switching**: Support Positron (light) and Dark Matter (dark) tile layers
 - **Click Interaction**: Click on map to view nearest facility information
@@ -43,7 +43,10 @@ Transforming Taiwan's local social welfare resources into a "warm topography" on
 |------|---------|------------------|------------------|
 | 🏥 Hospital | `amenity=hospital` | ~600m | 1.0 |
 | 🏨 Clinic | `amenity=clinic` | ~300m | 0.5 |
+| 💊 Pharmacy | `amenity=pharmacy` | ~200m | 0.3 |
 | 📚 Library | `amenity=library` | ~500m | 0.7 |
+| 🏘️ Community Center | `amenity=community_centre` | ~300m | 0.5 |
+| 👶 Kindergarten | `amenity=kindergarten` | ~200m | 0.4 |
 | 🏠 Social Facility | `social_facility=*` | ~400m | 0.8 |
 
 ---
