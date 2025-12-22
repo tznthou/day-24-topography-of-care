@@ -14,7 +14,17 @@ const OverpassModule = (() => {
     timeout: 30000,
     retryDelay: 2000,
     maxRetries: 2,
-    cacheExpiry: 5 * 60 * 1000  // 5 minutes
+    cacheExpiry: 5 * 60 * 1000,  // 5 minutes
+    minRequestInterval: 1000,    // Rate limiting: 1 request per second (H04)
+
+    // Taiwan bounding box for coordinate validation (H05)
+    taiwanBounds: {
+      minLat: 21.0,
+      maxLat: 26.5,
+      minLng: 119.0,
+      maxLng: 122.5
+    },
+    maxNameLength: 200  // Truncate long names
   };
 
   // Cache storage
@@ -22,6 +32,9 @@ const OverpassModule = (() => {
 
   // Current endpoint index
   let endpointIndex = 0;
+
+  // Rate limiting state (H04)
+  let lastRequestTime = 0;
 
   /**
    * Build Overpass QL query for social care resources
@@ -83,7 +96,7 @@ out center tags;
   }
 
   /**
-   * Fetch resources from Overpass API
+   * Fetch resources from Overpass API with rate limiting (H04)
    * @param {string} bbox - Bounding box string
    * @returns {Promise<Array>} Array of resource objects
    */
@@ -97,6 +110,16 @@ out center tags;
       return cached.data;
     }
 
+    // Rate limiting (H04): enforce minimum interval between requests
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < CONFIG.minRequestInterval) {
+      const waitTime = CONFIG.minRequestInterval - timeSinceLastRequest;
+      console.log(`[OverpassModule] Rate limiting: waiting ${waitTime}ms`);
+      await sleep(waitTime);
+    }
+    lastRequestTime = Date.now();
+
     // Build query
     const query = buildQuery(bbox);
     console.log('[OverpassModule] Fetching resources for bbox:', bbox);
@@ -108,6 +131,16 @@ out center tags;
 
       try {
         const response = await fetchWithTimeout(endpoint, query);
+
+        // Handle 429 Too Many Requests (H04)
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : 5000;
+          console.warn(`[OverpassModule] Rate limited (429), waiting ${waitTime}ms`);
+          await sleep(waitTime);
+          continue;
+        }
+
         const data = await response.json();
 
         if (data.elements) {
@@ -175,32 +208,68 @@ out center tags;
   }
 
   /**
-   * Parse Overpass elements into resource objects
+   * Validate coordinate is within Taiwan bounds (H05)
+   * @param {number} lat
+   * @param {number} lng
+   * @returns {boolean}
+   */
+  function isValidCoordinate(lat, lng) {
+    // Check type and finite
+    if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+
+    // Check Taiwan bounds
+    const { minLat, maxLat, minLng, maxLng } = CONFIG.taiwanBounds;
+    return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+  }
+
+  /**
+   * Parse Overpass elements into resource objects with validation (H05)
    * @param {Array} elements
    * @returns {Array}
    */
   function parseElements(elements) {
+    // Validate input array
+    if (!Array.isArray(elements)) {
+      console.error('[OverpassModule] Invalid elements: not an array');
+      return [];
+    }
+
     return elements
       .map(el => {
+        // Basic type check
+        if (!el || typeof el !== 'object') return null;
+
         // Get coordinates (center for ways)
         const lat = el.lat || (el.center && el.center.lat);
         const lng = el.lon || (el.center && el.center.lon);
 
-        if (!lat || !lng) return null;
+        // Validate coordinates (H05)
+        if (!isValidCoordinate(lat, lng)) {
+          return null;  // Skip silently - out of bounds or invalid
+        }
 
         // Determine resource type
         const type = getResourceType(el.tags);
         if (!type) return null;
 
-        // Extract name and other info
-        const name = el.tags?.name || el.tags?.['name:zh'] || el.tags?.['name:en'] || null;
+        // Validate ID
+        const id = parseInt(el.id, 10);
+        if (!Number.isFinite(id) || id <= 0) return null;
+
+        // Extract and sanitize name (truncate long names)
+        let name = el.tags?.name || el.tags?.['name:zh'] || el.tags?.['name:en'] || null;
+        if (name && name.length > CONFIG.maxNameLength) {
+          name = name.substring(0, CONFIG.maxNameLength) + '...';
+        }
+
         const address = formatAddress(el.tags);
 
         return {
-          id: el.id,
+          id,
           type,
-          lat,
-          lng,
+          lat: parseFloat(lat.toFixed(6)),  // Limit precision
+          lng: parseFloat(lng.toFixed(6)),
           name,
           address,
           tags: el.tags || {}

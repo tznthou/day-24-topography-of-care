@@ -16,6 +16,7 @@
     frame-ancestors 'none';
     base-uri 'self';
     form-action 'self';
+    upgrade-insecure-requests;
   ">
 
   <!-- Leaflet CSS -->
@@ -51,10 +52,10 @@
   <div class="relative w-screen h-screen">
 
     <!-- Map Container -->
-    <div id="map" class="absolute inset-0 z-0"></div>
+    <div id="map" class="absolute inset-0 z-0" role="application" aria-label="互動式地圖"></div>
 
     <!-- Canvas Overlay for Contours -->
-    <canvas id="contour-canvas" class="absolute inset-0 z-10 pointer-events-none"></canvas>
+    <canvas id="contour-canvas" class="absolute inset-0 z-10 pointer-events-none" aria-hidden="true"></canvas>
 
     <!-- Header -->
     <header class="absolute top-0 left-0 right-0 z-20 p-4 pointer-events-none">
@@ -78,26 +79,27 @@
           <!-- Help Button -->
           <button id="help-btn"
                   class="help-btn bg-white/90 backdrop-blur-sm rounded-lg w-10 h-10 border border-gray-200 shadow-sm hover:bg-emerald-50 hover:border-emerald-300 transition-colors flex items-center justify-center"
-                  title="如何判讀">
-            <span class="text-lg">?</span>
+                  title="如何判讀"
+                  aria-label="開啟使用說明">
+            <span class="text-lg" aria-hidden="true">?</span>
           </button>
         </div>
       </div>
     </header>
 
     <!-- Side Panel -->
-    <aside id="side-panel" class="absolute top-20 left-4 z-20 w-72 bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-lg overflow-hidden transition-all duration-300">
+    <aside id="side-panel" class="absolute top-20 left-4 z-20 w-72 bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-lg overflow-hidden transition-all duration-300" role="complementary" aria-label="資源篩選與統計">
 
       <!-- Stats Section -->
-      <div class="p-4 border-b border-gray-100">
+      <div class="p-4 border-b border-gray-100" aria-live="polite" aria-atomic="true">
         <h2 class="text-sm font-medium text-gray-600 mb-3">目前視野</h2>
         <div class="grid grid-cols-2 gap-3">
           <div class="bg-emerald-50 rounded-lg p-3">
-            <div id="stat-total" class="text-2xl font-light text-emerald-600">-</div>
+            <div id="stat-total" class="text-2xl font-light text-emerald-600" aria-label="資源總數">-</div>
             <div class="text-xs text-gray-500">資源總數</div>
           </div>
           <div class="bg-amber-50 rounded-lg p-3">
-            <div id="stat-density" class="text-2xl font-light text-amber-600">-</div>
+            <div id="stat-density" class="text-2xl font-light text-amber-600" aria-label="密度指數">-</div>
             <div class="text-xs text-gray-500">密度指數</div>
           </div>
         </div>
@@ -161,9 +163,9 @@
       </div>
 
       <!-- Loading State -->
-      <div id="loading-state" class="p-4 hidden">
+      <div id="loading-state" class="p-4 hidden" role="status" aria-live="polite">
         <div class="flex items-center gap-3">
-          <div class="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <div class="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" aria-hidden="true"></div>
           <span class="text-sm text-gray-500">載入資源點...</span>
         </div>
       </div>
@@ -184,13 +186,17 @@
       </a>
     </footer>
 
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
+
     <!-- Theme Toggle & Zoom Info -->
     <div class="absolute bottom-4 right-4 z-20 flex items-center gap-2">
       <!-- Theme Toggle -->
       <button id="theme-toggle"
               class="theme-toggle bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
-              title="切換主題">
-        <span class="text-sm">🌙</span>
+              title="切換主題"
+              aria-label="切換亮暗主題">
+        <span class="text-sm" aria-hidden="true">🌙</span>
       </button>
       <!-- Zoom Info -->
       <div class="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-200 shadow-sm">
@@ -202,14 +208,14 @@
   </div>
 
   <!-- Guide Modal -->
-  <div id="guide-modal" class="guide-modal hidden">
+  <div id="guide-modal" class="guide-modal hidden" role="dialog" aria-modal="true" aria-labelledby="guide-title">
     <div class="guide-backdrop"></div>
     <div class="guide-content">
       <!-- Close Button -->
-      <button id="guide-close" class="guide-close">&times;</button>
+      <button id="guide-close" class="guide-close" aria-label="關閉說明">&times;</button>
 
       <!-- Title -->
-      <h2 class="text-xl font-light text-gray-800 mb-6 text-center">
+      <h2 id="guide-title" class="text-xl font-light text-gray-800 mb-6 text-center">
         如何判讀<span class="text-emerald-600">關懷</span>地景？
       </h2>
 

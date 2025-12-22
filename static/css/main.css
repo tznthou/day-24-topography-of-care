@@ -3,6 +3,33 @@
    Main Stylesheet
    ===================================================== */
 
+/* =====================================================
+   CSS Variables for Theme Support (M09)
+   ===================================================== */
+:root {
+  /* Light theme (default) */
+  --bg-primary: #f3f4f6;
+  --bg-panel: rgba(255, 255, 255, 0.95);
+  --bg-panel-hover: rgba(255, 255, 255, 1);
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+body.theme-dark {
+  /* Dark theme */
+  --bg-primary: #111827;
+  --bg-panel: rgba(31, 41, 55, 0.95);
+  --bg-panel-hover: rgba(55, 65, 81, 0.95);
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --border-color: #374151;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
 /* Reset & Base */
 *, *::before, *::after {
   box-sizing: border-box;
