@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>關懷地景 The Topography of Care</title>
 
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.tailwindcss.com https://d3js.org;
+    style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.tailwindcss.com;
+    img-src 'self' data: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org;
+    connect-src 'self' https://overpass.kumi.systems https://overpass-api.de;
+    font-src 'self';
+    frame-ancestors 'none';
+    base-uri 'self';
+    form-action 'self';
+  ">
+
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="

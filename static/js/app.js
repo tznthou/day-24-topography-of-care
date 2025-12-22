@@ -403,14 +403,18 @@ const App = (() => {
       kindergarten: '幼兒園'
     };
 
-    // Build content HTML
+    // Build content HTML (all dynamic values escaped for XSS protection)
+    const typeLabel = typeLabels[resource.type] || escapeHtml(resource.type);
+    const osmId = Number.isInteger(resource.id) ? resource.id : encodeURIComponent(resource.id);
+
     const html = `
       <div class="facility-card">
-        <div class="facility-type">${typeLabels[resource.type] || resource.type}</div>
+        <div class="facility-type">${typeLabel}</div>
         <div class="facility-name">${escapeHtml(resource.name || '未命名設施')}</div>
         ${resource.address ? `<div class="facility-address">${escapeHtml(resource.address)}</div>` : ''}
         <div class="mt-2 text-xs text-gray-500">
-          <a href="https://www.openstreetmap.org/node/${resource.id}" target="_blank"
+          <a href="https://www.openstreetmap.org/node/${osmId}" target="_blank"
+             rel="noopener noreferrer"
              class="text-care-gold hover:underline">
             在 OSM 查看
           </a>
