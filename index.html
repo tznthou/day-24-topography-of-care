@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>關懷地景 The Topography of Care</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="static/css/main.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'care-gold': '#fbbf24',
+            'care-green': '#84cc16',
+            'care-amber': '#f59e0b',
+            'care-dark': '#1a1a2e',
+            'care-darker': '#0f0f1a',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 text-gray-800 overflow-hidden">
+
+  <!-- Main Container -->
+  <div class="relative w-screen h-screen">
+
+    <!-- Map Container -->
+    <div id="map" class="absolute inset-0 z-0"></div>
+
+    <!-- Canvas Overlay for Contours -->
+    <canvas id="contour-canvas" class="absolute inset-0 z-10 pointer-events-none"></canvas>
+
+    <!-- Header -->
+    <header class="absolute top-0 left-0 right-0 z-20 p-4 pointer-events-none">
+      <div class="flex items-center justify-between">
+        <div class="pointer-events-auto">
+          <h1 class="text-2xl font-light tracking-wider text-gray-800">
+            <span class="text-emerald-600">關懷</span>地景
+          </h1>
+          <p class="text-xs text-gray-500 mt-1">The Topography of Care</p>
+        </div>
+
+        <!-- Legend + Help Button -->
+        <div class="pointer-events-auto flex items-center gap-2">
+          <div class="bg-white/90 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-sm">
+            <div class="text-xs text-gray-400 mb-2">資源密度</div>
+            <div class="flex items-center gap-2">
+              <div class="w-16 h-2 rounded-full bg-gradient-to-r from-care-green via-care-gold to-care-amber"></div>
+              <span class="text-xs text-gray-500">低 → 高</span>
+            </div>
+          </div>
+          <!-- Help Button -->
+          <button id="help-btn"
+                  class="help-btn bg-white/90 backdrop-blur-sm rounded-lg w-10 h-10 border border-gray-200 shadow-sm hover:bg-emerald-50 hover:border-emerald-300 transition-colors flex items-center justify-center"
+                  title="如何判讀">
+            <span class="text-lg">?</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Side Panel -->
+    <aside id="side-panel" class="absolute top-20 left-4 z-20 w-72 bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-lg overflow-hidden transition-all duration-300">
+
+      <!-- Stats Section -->
+      <div class="p-4 border-b border-gray-100">
+        <h2 class="text-sm font-medium text-gray-600 mb-3">目前視野</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-emerald-50 rounded-lg p-3">
+            <div id="stat-total" class="text-2xl font-light text-emerald-600">-</div>
+            <div class="text-xs text-gray-500">資源總數</div>
+          </div>
+          <div class="bg-amber-50 rounded-lg p-3">
+            <div id="stat-density" class="text-2xl font-light text-amber-600">-</div>
+            <div class="text-xs text-gray-500">密度指數</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Types -->
+      <div class="p-4 border-b border-gray-100">
+        <h2 class="text-sm font-medium text-gray-600 mb-3">資源類型</h2>
+        <div class="space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked data-type="hospital" class="resource-filter accent-emerald-600">
+            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+            <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">醫院</span>
+            <span id="count-hospital" class="ml-auto text-xs text-gray-400">0</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked data-type="clinic" class="resource-filter accent-emerald-600">
+            <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+            <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">診所</span>
+            <span id="count-clinic" class="ml-auto text-xs text-gray-400">0</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked data-type="pharmacy" class="resource-filter accent-emerald-600">
+            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+            <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">藥局</span>
+            <span id="count-pharmacy" class="ml-auto text-xs text-gray-400">0</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked data-type="library" class="resource-filter accent-emerald-600">
+            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+            <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">圖書館</span>
+            <span id="count-library" class="ml-auto text-xs text-gray-400">0</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked data-type="community" class="resource-filter accent-emerald-600">
+            <span class="w-3 h-3 rounded-full bg-teal-500"></span>
+            <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">社區活動中心</span>
+            <span id="count-community" class="ml-auto text-xs text-gray-400">0</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked data-type="kindergarten" class="resource-filter accent-emerald-600">
+            <span class="w-3 h-3 rounded-full bg-pink-500"></span>
+            <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">幼兒園</span>
+            <span id="count-kindergarten" class="ml-auto text-xs text-gray-400">0</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" checked data-type="social" class="resource-filter accent-emerald-600">
+            <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+            <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">社福機構</span>
+            <span id="count-social" class="ml-auto text-xs text-gray-400">0</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Selected Info -->
+      <div id="selected-info" class="p-4 hidden">
+        <h2 class="text-sm font-medium text-gray-600 mb-2">選取的設施</h2>
+        <div id="selected-content" class="text-sm">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-state" class="p-4 hidden">
+        <div class="flex items-center gap-3">
+          <div class="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <span class="text-sm text-gray-500">載入資源點...</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Footer -->
+    <footer class="absolute bottom-4 left-4 z-20 text-xs text-gray-500">
+      <span>Data: </span>
+      <a href="https://www.openstreetmap.org/copyright" target="_blank"
+         class="text-gray-600 hover:text-emerald-600 transition-colors">
+        OpenStreetMap
+      </a>
+      <span class="mx-2">|</span>
+      <a href="https://osm.tw/" target="_blank"
+         class="text-gray-600 hover:text-emerald-600 transition-colors">
+        OSM 台灣
+      </a>
+    </footer>
+
+    <!-- Theme Toggle & Zoom Info -->
+    <div class="absolute bottom-4 right-4 z-20 flex items-center gap-2">
+      <!-- Theme Toggle -->
+      <button id="theme-toggle"
+              class="theme-toggle bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
+              title="切換主題">
+        <span class="text-sm">🌙</span>
+      </button>
+      <!-- Zoom Info -->
+      <div class="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-200 shadow-sm">
+        <span class="text-xs text-gray-500">Zoom: </span>
+        <span id="zoom-level" class="text-sm text-emerald-600">13</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Guide Modal -->
+  <div id="guide-modal" class="guide-modal hidden">
+    <div class="guide-backdrop"></div>
+    <div class="guide-content">
+      <!-- Close Button -->
+      <button id="guide-close" class="guide-close">&times;</button>
+
+      <!-- Title -->
+      <h2 class="text-xl font-light text-gray-800 mb-6 text-center">
+        如何判讀<span class="text-emerald-600">關懷</span>地景？
+      </h2>
+
+      <!-- Visual Metaphor -->
+      <div class="space-y-4 mb-6">
+        <!-- Peak -->
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-care-green to-care-amber flex items-center justify-center flex-shrink-0">
+            <span class="text-2xl">🏔️</span>
+          </div>
+          <div>
+            <div class="font-medium text-gray-800">山峰 = 守護之地</div>
+            <div class="text-sm text-gray-500">等高線越密集，代表該區域資源越豐富，形成關懷的「山脈」</div>
+          </div>
+        </div>
+
+        <!-- Valley -->
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center flex-shrink-0">
+            <span class="text-xl text-gray-400">∿</span>
+          </div>
+          <div>
+            <div class="font-medium text-gray-800">深谷 = 呼喚之地</div>
+            <div class="text-sm text-gray-500">空白區域代表資源稀缺，是關懷最應觸及的地方</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Color Legend -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <div class="text-sm text-gray-600 mb-2">密度色階</div>
+        <div class="flex items-center gap-3">
+          <div class="flex-1 h-3 rounded-full bg-gradient-to-r from-care-green via-care-gold to-care-amber"></div>
+          <div class="flex gap-4 text-xs text-gray-500">
+            <span>低</span>
+            <span>→</span>
+            <span>高</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usage Tips -->
+      <div class="grid grid-cols-2 gap-3 mb-6 text-sm">
+        <div class="flex items-center gap-2 text-gray-600">
+          <span class="text-base">🔍</span>
+          <span>縮放查看細節</span>
+        </div>
+        <div class="flex items-center gap-2 text-gray-600">
+          <span class="text-base">☑️</span>
+          <span>篩選資源類型</span>
+        </div>
+        <div class="flex items-center gap-2 text-gray-600">
+          <span class="text-base">👆</span>
+          <span>點擊查看設施</span>
+        </div>
+        <div class="flex items-center gap-2 text-gray-600">
+          <span class="text-base">🌙</span>
+          <span>切換亮/暗主題</span>
+        </div>
+      </div>
+
+      <!-- Data Source -->
+      <div class="text-xs text-gray-400 text-center mb-4">
+        資料來自 <a href="https://osm.tw/" target="_blank" class="text-emerald-600 hover:underline">OpenStreetMap</a> 志工標註，可能有遺漏
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
+          <input type="checkbox" id="guide-no-show" class="accent-emerald-600">
+          <span>不再顯示</span>
+        </label>
+        <button id="guide-start" class="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
+          開始探索
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+
+  <!-- D3 for contours -->
+  <script src="https://d3js.org/d3-array.v3.min.js"></script>
+  <script src="https://d3js.org/d3-contour.v4.min.js"></script>
+  <script src="https://d3js.org/d3-geo.v3.min.js"></script>
+
+  <!-- App modules -->
+  <script src="static/js/map.js"></script>
+  <script src="static/js/overpass.js"></script>
+  <script src="static/js/contour.js"></script>
+  <script src="static/js/renderer.js"></script>
+  <script src="static/js/app.js"></script>
+
+</body>
+</html>

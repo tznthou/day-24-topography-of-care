@@ -1,0 +1,33 @@
+# Code Review (內部文件，不上傳)
+CODE_REVIEW*.md
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# 備份檔案
+*.bak
+*.backup
+
+# 本地設定
+.env
+.env.local
+*.local
