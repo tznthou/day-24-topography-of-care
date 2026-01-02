@@ -193,7 +193,8 @@
     <div id="toast-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
 
     <!-- Theme Toggle & Zoom Info -->
-    <div class="absolute bottom-4 right-4 z-20 flex items-center gap-2">
+    <!-- 往上移避開 Leaflet zoom 控制 -->
+    <div class="absolute bottom-28 right-4 z-20 flex items-center gap-2">
       <!-- Theme Toggle -->
       <button id="theme-toggle"
               class="theme-toggle bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"

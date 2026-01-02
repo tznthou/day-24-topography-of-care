@@ -55,6 +55,7 @@ html, body {
 .leaflet-control-zoom {
   border: none !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  z-index: 1000 !important;  /* 確保 zoom 控制在最上層 */
 }
 
 .leaflet-control-zoom a {

@@ -71,7 +71,7 @@ const MapModule = (() => {
       maxZoom: CONFIG.maxZoom
     }).addTo(map);
 
-    // Move zoom control to bottom right
+    // Zoom control 保持右下角
     map.zoomControl.setPosition('bottomright');
 
     // Update zoom display
