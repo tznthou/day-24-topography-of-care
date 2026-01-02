@@ -290,3 +290,9 @@ energy(x, y) = A × exp(-d² / 2σ²)
 - ✅ 可用於商業用途
 - ⚠️ 修改後的程式碼必須以相同授權釋出
 - ⚠️ 網路服務也需公開原始碼
+
+---
+
+## 作者
+
+子超 - [tznthou@gmail.com](mailto:tznthou@gmail.com)
